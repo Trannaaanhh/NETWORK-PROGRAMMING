@@ -7,8 +7,8 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 // ================== Game constants ==================
-const TICK_RATE = 100;          // server logic tick
-const BROADCAST_RATE = 20;     // 20 updates/s cho client
+const TICK_RATE = 60;
+const BROADCAST_RATE = 20;
 const WORLD_W = 800, WORLD_H = 600;
 const PLAYER_SPEED = 200;
 const ORB_RADIUS = 30;
@@ -19,7 +19,7 @@ let nextId = 1;
 const COLORS = ['#4CAF50','#2196F3','#E91E63','#FF9800',
                 '#9C27B0','#00BCD4','#8BC34A','#FFC107'];
 
-const players = new Map(); // id -> {id, x, y, vx, vy, lastInputSeq, orbAngle, color}
+const players = new Map(); // id -> player object
 
 // ================== Helper ==================
 function createPlayer() {
@@ -31,7 +31,8 @@ function createPlayer() {
     vy: 0,
     lastInputSeq: 0,
     orbAngle: 0,
-    color: COLORS[Math.floor(Math.random() * COLORS.length)]
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    hp: 100 // 🔹 máu khởi tạo
   };
 }
 
@@ -100,6 +101,8 @@ setInterval(() => {
   const now = Date.now();
   const dt = (now - lastTime) / 1000;
   lastTime = now;
+
+  // update position + orb
   for (const p of players.values()) {
     p.x += p.vx * dt;
     p.y += p.vy * dt;
@@ -107,17 +110,60 @@ setInterval(() => {
     if (p.y < 10) p.y = 10;
     if (p.x > WORLD_W - 10) p.x = WORLD_W - 10;
     if (p.y > WORLD_H - 10) p.y = WORLD_H - 10;
-    p.orbAngle += ORB_SPEED * dt;
+
+    if (p.orbDir === undefined) p.orbDir = 1;
+    p.orbAngle += ORB_SPEED * dt * p.orbDir;
     if (p.orbAngle > Math.PI * 2) p.orbAngle -= Math.PI * 2;
+    if (p.orbAngle < 0) p.orbAngle += Math.PI * 2;
+  }
+
+  // 🔹 check collision kiếm ↔ người
+  for (const p of players.values()) {
+    const orbX = p.x + Math.cos(p.orbAngle) * ORB_RADIUS;
+    const orbY = p.y + Math.sin(p.orbAngle) * ORB_RADIUS;
+    for (const q of players.values()) {
+      if (p.id === q.id || q.hp <= 0) continue;
+      const dx = orbX - q.x;
+      const dy = orbY - q.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 20) { 
+        q.hp = Math.max(0, q.hp - 10); // trừ máu
+        console.log(`Player ${p.id} hit Player ${q.id}, HP=${q.hp}`);
+      }
+    }
+  }
+
+  // 🔹 check collision kiếm ↔ kiếm
+  const swords = [];
+  for (const p of players.values()) {
+    const orbX = p.x + Math.cos(p.orbAngle) * ORB_RADIUS;
+    const orbY = p.y + Math.sin(p.orbAngle) * ORB_RADIUS;
+    swords.push({ player: p, x: orbX, y: orbY });
+  }
+
+  for (let i = 0; i < swords.length; i++) {
+    for (let j = i + 1; j < swords.length; j++) {
+      const a = swords[i], b = swords[j];
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 80) {
+        a.player.orbDir *= -1;
+        b.player.orbDir *= -1;
+        console.log(`Sword clash: P${a.player.id} ↔ P${b.player.id}`);
+      }
+    }
   }
 }, 1000 / TICK_RATE);
+
+
 
 // ================== Broadcast ==================
 let serverTick = 0;
 setInterval(() => {
   serverTick++;
   const n = players.size;
-  const buf = new ArrayBuffer(1 + 4 + 4 + n * 25);
+  const buf = new ArrayBuffer(1 + 4 + 4 + n * 26); // 🔹 thêm 1 byte hp
   const dv = new DataView(buf);
   let off = 0;
   dv.setUint8(off, 2); off += 1;
@@ -132,7 +178,8 @@ setInterval(() => {
     const orbY = p.y + Math.sin(p.orbAngle) * ORB_RADIUS;
     dv.setFloat32(off, orbX); off += 4;
     dv.setFloat32(off, orbY); off += 4;
-    dv.setUint8(off, COLORS.indexOf(p.color)); off += 1; // gửi index màu
+    dv.setUint8(off, COLORS.indexOf(p.color)); off += 1;
+    dv.setUint8(off, p.hp); off += 1; // 🔹 gửi hp
   }
   wss.clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
@@ -141,4 +188,4 @@ setInterval(() => {
   });
 }, 1000 / BROADCAST_RATE);
 
-server.listen(3000, () => console.log('Server running on http://192.168.1.90:3000'));
+server.listen(3000, () => console.log('Server running on http://localhost:3000'));

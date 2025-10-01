@@ -8,7 +8,7 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const info = document.getElementById('info');
 const debug = document.getElementById('debug');
-const WS_URL = "ws://192.168.1.90:3000";
+const WS_URL = "ws://localhost:3000";
 const ws = new WebSocket(WS_URL);
 ws.binaryType = 'arraybuffer';
 
@@ -37,6 +37,28 @@ function buildInputBuffer(seq, flags) {
   return buf;
 }
 
+function updatePlayersList(playersMap) {
+  const playersList = document.getElementById('playersList');
+  playersList.innerHTML = ''; // xoá nội dung cũ
+
+  for (const [id, p] of playersMap) {
+    const div = document.createElement('div');
+    div.style.marginBottom = '8px';
+
+    div.innerHTML = `
+      <strong style="color:${p.color}">P${id}</strong>
+      <div style="background:#555; width:100%; height:10px; border-radius:3px; margin:3px 0;">
+        <div style="background:#4caf50; width:${p.hp}%; height:100%;"></div>
+      </div>
+      <span style="font-size:12px;">HP: ${p.hp}</span>
+    `;
+
+    playersList.appendChild(div);
+  }
+}
+
+
+
 function applyInputToLocal(player, flags, dt) {
   let vx = 0, vy = 0;
   if (flags & 1) vy -= 1;
@@ -54,11 +76,6 @@ function applyInputToLocal(player, flags, dt) {
 }
 
 // ================= WebSocket =================
-ws.addEventListener('open', () => {
-  info.textContent = 'Connected, waiting server welcome...';
-  setInterval(() => lastPingTime = performance.now(), 2000);
-});
-
 ws.addEventListener('message', (ev) => {
   const dv = new DataView(ev.data);
   const t = dv.getUint8(0);
@@ -78,18 +95,18 @@ ws.addEventListener('message', (ev) => {
       const orbX = dv.getFloat32(off); off += 4;
       const orbY = dv.getFloat32(off); off += 4;
       const colorIndex = dv.getUint8(off); off += 1;
+      const hp = dv.getUint8(off); off += 1; // 🔹 đọc máu
       const color = COLORS[colorIndex] || '#fff';
 
-      snapshot.players.set(id, { x, y, orbX, orbY, lastInputSeq: lastAck, color });
+      snapshot.players.set(id, { x, y, orbX, orbY, lastInputSeq: lastAck, color, hp });
     }
-    // lưu vào buffer
     historyBuffer.set(snapshot.time, snapshot);
-    // chỉ giữ 2s gần nhất
     for (const [t0] of historyBuffer) {
       if (snapshot.time - t0 > 2000) historyBuffer.delete(t0);
     }
   }
 });
+
 
 // ================= Input =================
 window.addEventListener('keydown', e => {
@@ -127,7 +144,6 @@ function render() {
 
   const renderTime = performance.now() - INTERP_DELAY;
 
-  // tìm 2 snapshot gần renderTime
   let earlier, later;
   for (const [t, snap] of historyBuffer) {
     if (t <= renderTime) earlier = snap;
@@ -140,7 +156,6 @@ function render() {
 
   const ratio = (renderTime - earlier.time) / (later.time - earlier.time);
 
-  // nội suy tất cả players
   for (const [id, ep] of earlier.players) {
     const lp = later.players.get(id);
     if (!lp) continue;
@@ -149,6 +164,7 @@ function render() {
     const orbX = ep.orbX + (lp.orbX - ep.orbX) * ratio;
     const orbY = ep.orbY + (lp.orbY - ep.orbY) * ratio;
     const color = ep.color;
+    const hp = ep.hp + (lp.hp - ep.hp) * ratio;
 
     // player circle
     ctx.beginPath();
@@ -158,6 +174,12 @@ function render() {
     ctx.fillStyle = '#000';
     ctx.font = '12px sans-serif';
     ctx.fillText('P' + id, x - 10, y - 18);
+
+    // 🔹 vẽ thanh máu
+    ctx.fillStyle = 'red';
+    ctx.fillRect(x - 15, y - 30, 30, 4);
+    ctx.fillStyle = 'green';
+    ctx.fillRect(x - 15, y - 30, (hp / 100) * 30, 4);
 
     // sword
     if (swordImg.complete) {
@@ -179,6 +201,7 @@ function render() {
 
   debug.textContent = `players: ${earlier.players.size} ping≈${ping}ms`;
 
+  updatePlayersList(earlier.players);
   requestAnimationFrame(render);
 }
 render();
