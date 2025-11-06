@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamin ⚔️ Arena</title>
+    <style>
+        /* Reset cơ bản */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e; /* Nền tối cho cảm giác game */
+            color: #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Container chính */
+        #game-container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background-color: #252526;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Canvas và khu vực hiển thị game */
+        #canvas-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #c {
+            border: 3px solid #61dafb; /* Border nổi bật */
+            background-color: #333;
+        }
+        #info, #debug {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #aaaaaa;
+        }
+
+        /* Sidebar cho trạng thái người chơi */
+        #sidebar {
+            width: 250px;
+            padding: 15px;
+            background-color: #2d2d30;
+            border-radius: 6px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        #sidebar h3 {
+            color: #61dafb;
+            border-bottom: 2px solid #3c3c3c;
+            padding-bottom: 5px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        /* Danh sách người chơi */
+        #playersList > div {
+            border: 1px solid #444;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #3a3a3a 0%, #2d2d2d 100%);
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        #playersList > div:hover {
+            background: linear-gradient(135deg, #4a4a4a 0%, #3d3d3d 100%);
+            border-color: #61dafb;
+            transform: translateY(-2px);
+        }
+
+        /* Người chơi đã chết */
+        #playersList > div[style*="opacity: 0.6"] {
+            background: linear-gradient(135deg, #5a3a3a 0%, #4d2d2d 100%);
+        }
+
+        /* Thanh máu trong danh sách */
+        #playersList .hp-bar-container {
+            background: #444;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        #playersList .hp-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease-out, background-color 0.3s;
+        }
+
+        /* Nút Hồi sinh */
+        #respawnButton {
+            display: none; /* Mặc định ẩn, client.js sẽ kiểm soát */
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #e91e63; /* Màu đỏ nổi bật */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #respawnButton:hover {
+            background-color: #c2185b;
+        }
+        #respawnButton:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="canvas-area">
+            <canvas id="c" width="800" height="600"></canvas>
+            <div id="info">Connecting...</div>
+            <div id="debug"></div>
+        </div>
+
+        <div id="sidebar">
+            <h3>Danh sách Người chơi</h3>
+            <div id="playersList">
+                <div>Chờ kết nối...</div>
+            </div>
+            
+            <button id="respawnButton">
+                HỒI SINH (Chờ 2s)
+            </button>
+        </div>
+    </div>
+
+    <script src="client.js"></script> 
+
+</body>
+</html>
