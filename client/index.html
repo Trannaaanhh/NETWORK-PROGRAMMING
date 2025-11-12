@@ -1,150 +1,618 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gamin ⚔️ Arena</title>
-    <style>
-        /* Reset cơ bản */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #1e1e1e; /* Nền tối cho cảm giác game */
-            color: #ccc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gamin ⚔️ Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #1e1e1e;
+      --bg-panel: #252526;
+      --bg-input: #333;
+      --text-light: #f0f0f0;
+      --text-dim: #aaa;
+      --border-color: #444;
+      --accent: #61dafb;
+      --danger: #e91e63;
+      --success: #4CAF50;
+      --warning: #FF9800;
+    }
 
-        /* Container chính */
-        #game-container {
-            display: flex;
-            gap: 20px;
-            padding: 20px;
-            background-color: #252526;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        /* Canvas và khu vực hiển thị game */
-        #canvas-area {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        #c {
-            border: 3px solid #61dafb; /* Border nổi bật */
-            background-color: #333;
-        }
-        #info, #debug {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #aaaaaa;
-        }
+    body {
+      font-family: 'Nunito', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #2b2b2b 0%, var(--bg-dark) 100%);
+      color: var(--text-light);
+      display: flex;
+      /* SỬA: Dùng flex-wrap để các panel xuống dòng */
+      flex-wrap: wrap; 
+      justify-content: center;
+      align-items: flex-start; /* Gióng lên trên */
+      min-height: 100vh;
+      padding: 20px;
+      gap: 20px; /* Thêm khoảng cách giữa các panel */
+    }
 
-        /* Sidebar cho trạng thái người chơi */
-        #sidebar {
-            width: 250px;
-            padding: 15px;
-            background-color: #2d2d30;
-            border-radius: 6px;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
-        }
-        #sidebar h3 {
-            color: #61dafb;
-            border-bottom: 2px solid #3c3c3c;
-            padding-bottom: 5px;
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
+    .panel {
+      background: var(--bg-panel);
+      padding: 24px 32px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+      text-align: center;
+      border: 1px solid var(--border-color);
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    /* Panel đăng nhập sẽ chiếm giữa màn hình */
+    #startPanel {
+      margin-top: 20vh;
+    }
 
-        /* Danh sách người chơi */
-        #playersList > div {
-            border: 1px solid #444;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            background: linear-gradient(135deg, #3a3a3a 0%, #2d2d2d 100%);
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
+    h2 {
+      margin-top: 0;
+      color: var(--accent);
+      font-size: 24px;
+    }
 
-        #playersList > div:hover {
-            background: linear-gradient(135deg, #4a4a4a 0%, #3d3d3d 100%);
-            border-color: #61dafb;
-            transform: translateY(-2px);
-        }
+    h3 {
+      margin-top: 0;
+      color: var(--accent);
+      font-size: 20px;
+      text-align: center;
+    }
 
-        /* Người chơi đã chết */
-        #playersList > div[style*="opacity: 0.6"] {
-            background: linear-gradient(135deg, #5a3a3a 0%, #4d2d2d 100%);
-        }
+    h4 {
+      margin: 0 0 16px 0;
+      color: var(--accent);
+      font-size: 18px;
+    }
 
-        /* Thanh máu trong danh sách */
-        #playersList .hp-bar-container {
-            background: #444;
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            margin: 5px 0;
-            overflow: hidden;
-            border: 1px solid #333;
-        }
+    input, select {
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      font-size: 16px;
+      background: var(--bg-input);
+      color: var(--text-light);
+      width: 100%;
+      transition: border-color 0.2s ease;
+    }
+    
+    select {
+      padding: 12px 8px; /* Điều chỉnh padding cho select */
+      font-size: 14px;
+    }
 
-        #playersList .hp-bar {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.3s ease-out, background-color 0.3s;
-        }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
 
-        /* Nút Hồi sinh */
-        #respawnButton {
-            display: none; /* Mặc định ẩn, client.js sẽ kiểm soát */
-            width: 100%;
-            padding: 10px;
-            margin-top: 20px;
-            background-color: #e91e63; /* Màu đỏ nổi bật */
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        #respawnButton:hover {
-            background-color: #c2185b;
-        }
-        #respawnButton:disabled {
-            background-color: #666;
-            cursor: not-allowed;
-        }
-    </style>
+    button {
+      padding: 12px 20px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: #000;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    button:hover {
+      filter: brightness(1.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(97, 218, 251, 0.3);
+    }
+
+    button.back { 
+      background: var(--danger); 
+      color: #fff; 
+    }
+    button.back:hover { 
+      box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3); 
+    }
+
+    button.start { 
+      background: var(--success); 
+      color: #fff; 
+    }
+    button.start:hover { 
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); 
+    }
+
+    button.cancel { 
+      background: var(--warning); 
+      color: #000; 
+    }
+    button.cancel:hover { 
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); 
+    }
+
+    button:disabled { 
+      background: #555; 
+      color: #888; 
+      cursor: not-allowed; 
+    }
+    button:disabled:hover { 
+      transform: none; 
+      box-shadow: none; 
+      filter: none; 
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .button-group button {
+      margin: 0;
+      flex: 1;
+    }
+
+    #game-container {
+      display: none;
+      gap: 20px;
+      padding: 20px;
+      background-color: var(--bg-panel);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      border: 1px solid var(--border-color);
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    #canvas-area { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      position: relative; 
+      flex: 1;
+    }
+    
+    #c { 
+      border: 3px solid var(--accent); 
+      background: #333; 
+      border-radius: 4px;
+    }
+    
+    #countdownDisplay {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 120px;
+      color: white;
+      font-weight: bold;
+      text-shadow: 0 0 20px rgba(0,0,0,0.8);
+      display: none;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.1); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    #info, #debug { 
+      margin-top: 12px; 
+      font-size: 14px; 
+      color: var(--text-dim);
+      text-align: center;
+      width: 100%;
+    }
+
+    #sidebar {
+      width: 280px;
+      padding: 20px;
+      background: #2d2d30;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      height: 640px; /* Chiều cao cố định của canvas + padding */
+    }
+
+    ul.rooms { 
+      list-style: none; 
+      padding: 0; 
+      margin: 16px 0; 
+      max-height: 300px; 
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+    
+    ul.rooms li {
+      background: #333;
+      padding: 12px;
+      margin: 0;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background 0.2s ease;
+      text-align: left;
+    }
+
+    ul.rooms li:last-child {
+      border-bottom: none;
+    }
+
+    ul.rooms li:hover { 
+      background: #444; 
+    }
+    
+    ul.rooms li.in-progress { 
+      background: #500; 
+      color: #aaa; 
+      cursor: not-allowed; 
+    }
+    
+    ul.rooms li.countdown { 
+      background: #552200; 
+      color: #FF9800; 
+      cursor: not-allowed;
+    }
+
+    #playersList {
+      flex-grow: 1; /* SỬA: Cho nó lấp đầy không gian còn lại */
+      height: 150px; 
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      margin: 16px 0 0 0; 
+      background: #333;
+    }
+
+    #playersList > div {
+      background: #3a3a3e;
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      border-left: 4px solid var(--accent);
+    }
+    
+    #playersList > div strong { 
+      font-size: 15px; 
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    #playersList > div:last-child {
+      margin-bottom: 0;
+    }
+    
+    /* --- CSS CHO KHUNG CHAT MỚI --- */
+    #chat-container {
+      display: none; /* Ẩn ban đầu, hiện sau khi login */
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+      border-radius: 12px;
+      width: 400px; /* Độ rộng cố định */
+      height: 640px; /* Bằng chiều cao sidebar game */
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    #chat-container h3 {
+      margin-bottom: 16px;
+    }
+    
+    .chat-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .chat-tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'Nunito', sans-serif;
+    }
+    .chat-tab.active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+    }
+    #tabRoom {
+      display: none; /* Ẩn tab phòng ban đầu */
+    }
+    
+    .chat-display-area {
+      flex-grow: 1;
+      position: relative;
+      margin: 16px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-input);
+    }
+    
+    .chat-display {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow-y: auto;
+      padding: 8px;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+    
+    /* Ẩn/hiện màn hình chat theo tab */
+    #chatDisplayGlobal { display: block; }
+    #chatDisplayRoom { display: none; }
+    
+    .chat-display > div {
+      margin-bottom: 4px;
+    }
+    .chat-display .chat-global strong { color: #61dafb; }
+    .chat-display .chat-room strong { color: #8BC34A; }
+    .chat-display .chat-system { color: #aaa; font-style: italic; }
+    
+    #chatControls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #chatControls input {
+      margin: 0;
+      font-size: 14px;
+    }
+    #btnSendChat {
+      margin: 0;
+      font-size: 14px;
+      padding: 10px;
+    }
+    /* --- KẾT THÚC CSS CHAT --- */
+
+    .hp-bar-container {
+      margin-top: 6px;
+      width: 100%;
+      background: #333;
+      padding: 2px;
+      border-radius: 4px;
+    }
+    
+    .hp-bar {
+      height: 8px;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    #roomControls {
+      margin-top: auto; /* Đẩy cụm nút xuống dưới cùng */
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 16px; /* Thêm khoảng cách với phần chat */
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* --- MODAL MẬT KHẨU --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal-content {
+      background: var(--bg-panel);
+      padding: 28px 32px;
+      border-radius: 12px;
+      box-shadow: 0 15px 50px rgba(0,0,0,0.9);
+      border: 1px solid var(--border-color);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .modal-content h4 {
+      margin: 0 0 20px 0;
+      color: var(--accent);
+      font-size: 20px;
+    }
+    
+    .modal-content input {
+      width: 100%;
+      margin: 0 0 20px 0;
+    }
+
+    .welcome-text {
+      color: var(--text-dim);
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    .player-name {
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .section-title {
+      color: var(--text-light);
+      margin: 20px 0 12px 0;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #2d2d30;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+        align-items: flex-start;
+      }
+      
+      /* Sửa: Các panel chính sẽ không bị ảnh hưởng */
+      #game-container, #lobbyPanel, #chat-container {
+        width: 100%;
+        max-width: 500px; /* Đặt 1 độ rộng tối đa */
+        margin: 0 auto; /* Tự động căn giữa */
+        height: auto;
+      }
+
+      #game-container {
+        flex-direction: column;
+        padding: 15px;
+      }
+
+      #sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+      }
+
+      #c {
+        width: 100%;
+        height: auto;
+        max-width: 500px;
+      }
+
+      .panel {
+        padding: 20px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="canvas-area">
-            <canvas id="c" width="800" height="600"></canvas>
-            <div id="info">Connecting...</div>
-            <div id="debug"></div>
-        </div>
+  <div id="startPanel" class="panel">
+    <h2>⚔️ Gamin Arena</h2>
+    <p class="welcome-text">Chào mừng đến với đấu trường!</p>
+    <input id="playerNameInput" placeholder="Nhập tên của bạn..." maxlength="20" />
+    <button id="btnEnter">Vào Game</button>
+  </div>
 
-        <div id="sidebar">
-            <h3>Danh sách Người chơi</h3>
-            <div id="playersList">
-                <div>Chờ kết nối...</div>
-            </div>
-            
-            <button id="respawnButton">
-                HỒI SINH (Chờ 2s)
-            </button>
-        </div>
+  <div id="lobbyPanel" class="panel" style="display:none;">
+    <h2>🎮 Trang Chủ</h2>
+    <p class="welcome-text">Xin chào, <span id="displayName" class="player-name"></span></p>
+    
+    <div class="button-group">
+      <button id="btnCreateRoom">➕ Tạo Phòng</button>
+      <button id="btnJoinRoom">🚪 Vào Phòng</button>
     </div>
 
-    <script src="client.js"></script> 
+    <div id="createForm" style="display:none; margin-top:20px; border-top:1px solid var(--border-color); padding-top:20px;">
+      <h4>Tạo Phòng Mới</h4>
+      <input id="roomNameInput" placeholder="Tên phòng..." />
+      <input id="roomPassInput" type="password" placeholder="Mật khẩu (tùy chọn)" />
+      <div class="button-group">
+        <button id="btnCreateConfirm">✅ Tạo</button>
+        <button id="btnCreateCancel" class="back">❌ Hủy</button>
+      </div>
+    </div>
 
+    <div id="roomListContainer" style="display:none; margin-top:20px; border-top:1px solid var(--border-color); padding-top:20px;">
+      <h4>Danh Sách Phòng</h4>
+      <p class="section-title">Chọn một phòng để tham gia:</p>
+      <ul id="roomList" class="rooms">
+        <li>Đang tải danh sách phòng...</li>
+      </ul>
+      <button id="btnRoomBack" class="back">↩️ Quay Lại</button>
+    </div>
+  </div>
+
+  <div id="game-container" style="display:none;">
+    <div id="canvas-area">
+      <canvas id="c" width="800" height="600"></canvas>
+      <div id="countdownDisplay">5</div>
+      <div id="info">Đang kết nối...</div>
+      <div id="debug"></div>
+    </div>
+    
+    <div id="sidebar">
+      <h3>👥 Người Chơi</h3>
+            
+      <div id="playersList">
+        <div>Đang kết nối...</div>
+      </div>
+      
+      <div id="roomControls">
+        <button id="btnStartGame" class="start" style="display:none;">🎯 Bắt Đầu Trận Đấu</button>
+        <button id="btnCancelGame" class="cancel" style="display:none;">⏹️ Hủy Đếm Ngược</button>
+        <button id="btnEndGame" class="back" style="display:none;">🏁 Kết Thúc Trận Đấu</button>
+        <button id="respawnButton" style="display:none;">💫 HỒI SINH</button>
+        <button id="btnLeaveRoom" class="back">🚪 Thoát Phòng</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="chat-container" style="display: none;">
+    <h3>📢 Chat</h3>
+    <div class="chat-tabs">
+      <button id="tabGlobal" class="chat-tab active">Global</button>
+      <button id="tabRoom" class="chat-tab">Phòng</button>
+    </div>
+    <div class="chat-display-area">
+      <div id="chatDisplayGlobal" class="chat-display">
+        </div>
+      <div id="chatDisplayRoom" class="chat-display">
+        </div>
+    </div>
+    <div id="chatControls">
+      <input id="chatInput" type="text" placeholder="Nhập chat..." style="font-size: 14px;">
+      <button id="btnSendChat" style="font-size: 14px; padding: 10px;">Gửi</button>
+    </div>
+  </div>
+  <div id="passwordModal" class="modal-overlay">
+    <div class="modal-content">
+      <h4 id="passModalTitle">🔐 Nhập Mật Khẩu</h4>
+      <input id="passInput" type="password" placeholder="Nhập mật khẩu phòng..." />
+      <input type="hidden" id="hiddenRoomIdInput" />
+      <div class="button-group">
+        <button id="btnPassConfirm">✅ Xác Nhận</button>
+        <button id="btnPassCancel" class="back">❌ Hủy</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="client.js"></script>
 </body>
 </html>
