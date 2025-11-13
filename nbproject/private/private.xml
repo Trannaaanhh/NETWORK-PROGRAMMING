@@ -4,14 +4,12 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/server.js</file>
-            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/game/constants.js</file>
-            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/game/physics.js</file>
-            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/game/roomLogic.js</file>
-            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/game/roomManager.js</file>
-            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/network/wsHandler.js</file>
-            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/network/messageRouter.js</file>
-            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/network/playerManager.js</file>
             <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/client/client.js</file>
+            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/lobby.js</file>
+            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/room.js</file>
+            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/game-logic.js</file>
+            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/server/utils.js</file>
+            <file>file:/D:/TheGioiLapTrinh/Netbean/gamin/client/index.html</file>
         </group>
     </open-files>
 </project-private>
